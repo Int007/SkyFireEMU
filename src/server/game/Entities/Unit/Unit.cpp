@@ -6821,6 +6821,30 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
         {
             switch (dummySpell->SpellIconID)
             {
+                case 2225: // Serpent Spread
+                {
+                                   // Proc only on multi-shot
+                    if (!target || procSpell->Id != 2643)
+                        return false;
+
+                    switch(triggerAmount)
+                    {
+                        case 30:
+                        {
+                            // Serpent sting 6s duration
+                            triggered_spell_id = 88453;
+                            break;
+                        }
+                        case 60:
+                        {
+                            // Serpent sting 9s duration
+                            triggered_spell_id = 88466;
+                            break;
+                        }
+                        break;
+                    }
+                    break;
+                }
                 case 3524: // Marked for Death
                 {
                     if (!roll_chance_i(triggerAmount))
@@ -6926,6 +6950,11 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     }
                     else
                         return false;
+                }
+                case 82661: // Aspect of the Fox
+                {
+                    EnergizeBySpell(this,82661,2,POWER_FOCUS);
+                    break;
                 }
                 case 34477: // Misdirection
                 {
@@ -15369,11 +15398,29 @@ void Unit::ApplyAttackTimePercentMod(WeaponAttackType att, float val, bool apply
     {
         ApplyPercentModFloatVar(_modAttackSpeedPct[att], val, !apply);
         ApplyPercentModFloatValue(UNIT_FIELD_BASEATTACKTIME+att, val, !apply);
+
+        if (GetTypeId() == TYPEID_PLAYER && att == BASE_ATTACK)
+        {
+            ApplyPercentModFloatValue(PLAYER_FIELD_MOD_HASTE, val, !apply);
+        }
+        else if (GetTypeId() == TYPEID_PLAYER && att == RANGED_ATTACK)
+        {
+            ApplyPercentModFloatValue(PLAYER_FIELD_MOD_RANGED_HASTE, val, !apply);
+        }
     }
     else
     {
         ApplyPercentModFloatVar(_modAttackSpeedPct[att], -val, apply);
         ApplyPercentModFloatValue(UNIT_FIELD_BASEATTACKTIME+att, -val, apply);
+
+        if (GetTypeId() == TYPEID_PLAYER && att == BASE_ATTACK)
+        {
+            ApplyPercentModFloatValue(PLAYER_FIELD_MOD_HASTE, -val, apply);
+        }
+        else if (GetTypeId() == TYPEID_PLAYER && att == RANGED_ATTACK)
+        {
+            ApplyPercentModFloatValue(PLAYER_FIELD_MOD_RANGED_HASTE, -val, apply);
+        }
     }
     m_attackTimer[att] = uint32(GetAttackTime(att) * _modAttackSpeedPct[att] * remainingTimePct);
 }
